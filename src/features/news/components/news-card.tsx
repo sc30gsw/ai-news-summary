@@ -4,11 +4,11 @@ import type { NewsArticle, Category, Source } from "~/features/news/types/schema
 
 const CATEGORY_COLORS = {
   all: "gray",
-  "ai-ml": "violet",
-  "react-frontend": "blue",
-  typescript: "cyan",
+  ai: "violet",
+  frontend: "blue",
   backend: "green",
-  tools: "orange",
+  infra: "orange",
+  mobile: "pink",
 } as const satisfies Record<Category, MantineColor>;
 
 const SOURCE_COLORS = {
@@ -35,7 +35,7 @@ export function NewsCard({ article }: Record<"article", NewsArticle>) {
               {CATEGORY_LABELS[article.category]}
             </Badge>
             <Badge color={SOURCE_COLORS[article.source]} variant="outline" size="sm">
-              {SOURCE_LABELS[article.source]}
+              {article.feedName ?? SOURCE_LABELS[article.source]}
             </Badge>
           </Group>
           <Text size="xs" c="dimmed">

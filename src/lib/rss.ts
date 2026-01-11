@@ -50,26 +50,51 @@ export async function fetchRSSFeeds() {
   const allItems = feedResults.flat();
 
   const techKeywords = [
-    "react",
-    "next",
-    "typescript",
-    "javascript",
+    // AI
     "ai",
     "llm",
     "gpt",
+    "claude",
+    "openai",
+    "machine learning",
+    // Frontend
+    "react",
+    "vue",
+    "svelte",
+    "angular",
+    "next",
+    "typescript",
+    "javascript",
+    "frontend",
+    // Backend
     "node",
     "bun",
     "deno",
     "rust",
     "go",
     "python",
-    "frontend",
-    "backend",
-    "api",
-    "web",
-    "tanstack",
     "hono",
     "elysia",
+    "backend",
+    "api",
+    // Infra
+    "docker",
+    "kubernetes",
+    "supabase",
+    "convex",
+    "turso",
+    "neon",
+    "vercel",
+    "cloud",
+    // Mobile
+    "react native",
+    "flutter",
+    "swift",
+    "kotlin",
+    "ios",
+    "android",
+    "mobile",
+    "expo",
   ] as const satisfies readonly string[];
 
   const filteredItems = allItems.filter((item) => {
@@ -81,7 +106,13 @@ export async function fetchRSSFeeds() {
 
   for (const item of filteredItems.slice(0, MAX_RSS_ARTICLES_TO_SUMMARIZE)) {
     const articleResult = await Result.tryPromise(async () => {
-      const article = await summarizeArticle(item.title, item.content, item.link, "rss");
+      const article = await summarizeArticle(
+        item.title,
+        item.content,
+        item.link,
+        "rss",
+        item.feedName,
+      );
       return {
         ...article,
         publishedAt: new Date(item.pubDate).toISOString(),

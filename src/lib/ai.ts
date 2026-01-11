@@ -15,9 +15,16 @@ const MAX_SEARCH_RESULTS = 5;
 const MAX_ARTICLES_TO_SUMMARIZE = 15;
 
 const SEARCH_TOPICS = [
-  "AI artificial intelligence LLM",
-  "React TypeScript frontend",
-  "backend Node.js Hono",
+  // AI (10件目標)
+  "AI LLM GPT Claude OpenAI Anthropic machine learning",
+  // Frontend (8件目標)
+  "React Vue Svelte Angular frontend UI component library",
+  // Backend (6件目標)
+  "Go Rust Python Node.js backend API microservices",
+  // Infra (6件目標)
+  "Convex Turso Supabase Neon PlanetScale Docker Kubernetes cloud",
+  // Mobile (5件目標)
+  "React Native Flutter Swift Kotlin iOS Android mobile",
 ] as const satisfies readonly string[];
 
 const PROMPTS = {
@@ -48,15 +55,15 @@ Respond in the following JSON format:
 {
   "title": "Japanese title",
   "summary": "200-300 character summary in Japanese",
-  "category": "ai-ml" | "react-frontend" | "typescript" | "backend" | "tools" (choose one)
+  "category": "ai" | "frontend" | "backend" | "infra" | "mobile" (choose one)
 }
 
 Category selection criteria:
-- ai-ml: AI, machine learning, LLM, ChatGPT related
-- react-frontend: React, Next.js, Vue, frontend related
-- typescript: TypeScript, type system related
-- backend: Node.js, Hono, Elysia, API, server-side related
-- tools: Development tools, libraries, others
+- ai: AI, LLM, machine learning, deep learning, ChatGPT, Claude, AI agents (any language)
+- frontend: React, Vue, Svelte, Angular, UI libraries, web frontend, TypeScript frontend
+- backend: Go, Rust, Python, Node.js, Java, Hono, Elysia, API, microservices, server-side
+- infra: DBaaS, BaaS, cloud services, Docker, Kubernetes, Convex, Turso, Supabase, Neon
+- mobile: React Native, Flutter, Swift, Kotlin, iOS, Android, mobile apps
 
 Important: All text output must be in Japanese.`,
 
@@ -66,12 +73,12 @@ Important: All text output must be in Japanese.`,
 From the following articles, select exactly 20 that engineers MUST know about.
 
 Selection criteria (in priority order):
-1. Major framework/library releases (React, Next.js, TypeScript, Node.js, etc.)
-2. Breaking changes or security vulnerabilities
-3. New AI/LLM developments affecting developers
-4. Significant industry announcements
-5. Practical tutorials and best practices
-6. Developer tool updates
+1. AI/LLM announcements and developments (highest priority)
+2. Frontend framework releases (React, Vue, Svelte, Angular, UI libraries)
+3. Backend framework/runtime updates (Go, Rust, Python, Node.js, Hono)
+4. Infrastructure services (DBaaS, BaaS, Convex, Turso, Supabase, Docker, K8s)
+5. Mobile development (React Native, Flutter, Swift, Kotlin)
+6. Breaking changes or security vulnerabilities
 
 Articles:
 ${articlesJson}
@@ -195,6 +202,7 @@ export async function summarizeArticle(
   content: SearchResult["content"],
   url: SearchResult["url"],
   source: SearchResult["source"],
+  feedName?: string,
 ) {
   const { text } = await generateText({
     model: gateway(GROK_SUMMARIZE_MODEL),
@@ -216,7 +224,7 @@ export async function summarizeArticle(
   const parsed = parseResult.unwrapOr({
     title: title,
     summary: content.slice(0, 300),
-    category: "tools" as Category,
+    category: "frontend" as Category,
   });
 
   return {
@@ -228,6 +236,7 @@ export async function summarizeArticle(
     category: parsed.category,
     publishedAt: new Date().toISOString(),
     fetchedAt: new Date().toISOString(),
+    feedName,
   } as const satisfies NewsArticle;
 }
 

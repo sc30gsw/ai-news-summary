@@ -1,13 +1,6 @@
 import * as v from "valibot";
 
-export const CategorySchema = v.picklist([
-  "all",
-  "ai-ml",
-  "react-frontend",
-  "typescript",
-  "backend",
-  "tools",
-]);
+export const CategorySchema = v.picklist(["all", "ai", "frontend", "backend", "infra", "mobile"]);
 
 export type Category = v.InferOutput<typeof CategorySchema>;
 
@@ -25,6 +18,7 @@ export const NewsArticleSchema = v.object({
   publishedAt: v.string(),
   fetchedAt: v.string(),
   citations: v.optional(v.array(v.string())),
+  feedName: v.optional(v.string()),
 });
 
 export type NewsArticle = v.InferOutput<typeof NewsArticleSchema>;

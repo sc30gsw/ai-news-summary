@@ -2,11 +2,11 @@ import type { Category, Source } from "~/features/news/types/schemas";
 
 export const CATEGORY_LABELS = {
   all: "すべて",
-  "ai-ml": "AI/ML",
-  "react-frontend": "React/Frontend",
-  typescript: "TypeScript",
+  ai: "AI",
+  frontend: "Frontend",
   backend: "Backend",
-  tools: "Tools",
+  infra: "Infra",
+  mobile: "Mobile",
 } as const satisfies Record<Category, string>;
 
 export const SOURCE_LABELS = {
