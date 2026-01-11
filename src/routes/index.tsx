@@ -1,13 +1,10 @@
-import { useTransition } from "react";
-import { Container, Title, Text, Stack, Group, Button, Paper } from "@mantine/core";
+import { Container, Title, Text, Stack, Group, Paper, Badge } from "@mantine/core";
 import { createFileRoute, stripSearchParams } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { all } from "better-all";
-import { Result } from "better-result";
 import { CategoryFilter } from "~/features/news/components/category-filter";
 import { NewsGrid } from "~/features/news/components/news-grid";
-import { fetchAndSummarizeNews } from "~/lib/ai";
-import { fetchRSSFeeds } from "~/lib/rss";
+import { getLastUpdated, getNews as getNewsFromKV } from "~/lib/kv";
 import { valibotValidator } from "@tanstack/valibot-adapter";
 import {
   defaultNewsSearchParams,
@@ -15,35 +12,16 @@ import {
 } from "~/features/news/types/news-search-params";
 
 const getNews = createServerFn({ method: "GET" }).handler(async () => {
-  const result = await Result.tryPromise(async () => {
-    const { aiNews, rssNews } = await all({
-      async aiNews() {
-        return fetchAndSummarizeNews().catch(() => []);
-      },
-      async rssNews() {
-        return fetchRSSFeeds().catch(() => []);
-      },
-    });
-
-    const allNews = [...aiNews, ...rssNews];
-
-    const uniqueNews = allNews.filter(
-      (article, index, self) =>
-        index === self.findIndex((a) => a.originalUrl === article.originalUrl),
-    );
-
-    return uniqueNews.sort(
-      (a, b) => new Date(b.fetchedAt).getTime() - new Date(a.fetchedAt).getTime(),
-    );
+  const { articles, lastUpdated } = await all({
+    async articles() {
+      return getNewsFromKV();
+    },
+    async lastUpdated() {
+      return getLastUpdated();
+    },
   });
 
-  if (Result.isError(result)) {
-    console.error("Failed to fetch news:", result.error);
-
-    return [];
-  }
-
-  return result.value;
+  return { articles, lastUpdated };
 });
 
 export const Route = createFileRoute("/")({
@@ -58,20 +36,29 @@ export const Route = createFileRoute("/")({
   loader: () => getNews(),
 });
 
-function HomePage() {
-  const articles = Route.useLoaderData();
-  const { category } = Route.useSearch();
+function formatLastUpdated(isoString: string | null) {
+  if (!isoString) {
+    return "未取得";
+  }
 
-  const [isPending, startTransition] = useTransition();
+  const date = new Date(isoString);
+
+  return date.toLocaleString("ja-JP", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Tokyo",
+  });
+}
+
+function HomePage() {
+  const { articles, lastUpdated } = Route.useLoaderData();
+  const { category } = Route.useSearch();
 
   const filteredArticles =
     category === "all" ? articles : articles.filter((article) => article.category === category);
-
-  const handleRefresh = () => {
-    startTransition(() => {
-      window.location.reload();
-    });
-  };
 
   return (
     <Container size="xl" py="xl">
@@ -85,14 +72,9 @@ function HomePage() {
                   AI、React、TypeScript、バックエンドなどの最新技術ニュースをAIで要約
                 </Text>
               </Stack>
-              <Button
-                onClick={handleRefresh}
-                loading={isPending}
-                disabled={isPending}
-                variant="light"
-              >
-                更新
-              </Button>
+              <Badge variant="light" size="lg">
+                最終更新: {formatLastUpdated(lastUpdated)}
+              </Badge>
             </Group>
 
             <CategoryFilter />
@@ -106,7 +88,7 @@ function HomePage() {
             </Text>
           </Group>
 
-          <NewsGrid articles={filteredArticles} isLoading={isPending} />
+          <NewsGrid articles={filteredArticles} isLoading={false} />
         </Stack>
       </Stack>
     </Container>

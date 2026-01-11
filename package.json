@@ -24,6 +24,7 @@
     "@tanstack/react-router": "^1.147.1",
     "@tanstack/react-start": "^1.147.1",
     "@tanstack/valibot-adapter": "^1.147.2",
+    "@vercel/kv": "^3.0.0",
     "ai": "^6.0.27",
     "better-all": "^0.0.1",
     "better-result": "^1.0.0",

@@ -59,7 +59,28 @@ Category selection criteria:
 - tools: Development tools, libraries, others
 
 Important: All text output must be in Japanese.`,
-} as const;
+
+  curate: (articlesJson: string) =>
+    `You are a senior tech editor curating a daily newsletter for software engineers.
+
+From the following articles, select exactly 20 that engineers MUST know about.
+
+Selection criteria (in priority order):
+1. Major framework/library releases (React, Next.js, TypeScript, Node.js, etc.)
+2. Breaking changes or security vulnerabilities
+3. New AI/LLM developments affecting developers
+4. Significant industry announcements
+5. Practical tutorials and best practices
+6. Developer tool updates
+
+Articles:
+${articlesJson}
+
+Respond with a JSON array of the selected article IDs in order of importance:
+["id1", "id2", "id3", ...]
+
+Return exactly 20 IDs. If fewer than 20 articles are provided, return all of them.`,
+};
 
 export async function fetchFromX() {
   const results: SearchResult[] = [];
@@ -151,6 +172,7 @@ export async function fetchFromWeb() {
     }
 
     const { text, sources } = result.value;
+
     if (sources && Array.isArray(sources)) {
       for (const source of sources) {
         if ("url" in source && "title" in source) {
@@ -241,4 +263,49 @@ export async function fetchAndSummarizeNews() {
   }
 
   return articles;
+}
+
+const MAX_CURATED_ARTICLES = 20;
+
+export async function curateNews(articles: NewsArticle[]): Promise<NewsArticle[]> {
+  if (articles.length <= MAX_CURATED_ARTICLES) {
+    return articles;
+  }
+
+  const articlesForCuration = articles.map((article) => ({
+    id: article.id,
+    title: article.title,
+    summary: article.summary,
+    category: article.category,
+    source: article.source,
+  }));
+
+  const result = await Result.tryPromise(async () => {
+    const { text } = await generateText({
+      model: gateway(GROK_SUMMARIZE_MODEL),
+      prompt: PROMPTS.curate(JSON.stringify(articlesForCuration)),
+    });
+
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+
+    if (!jsonMatch) {
+      throw new Error("No JSON array found in curation response");
+    }
+
+    const selectedIds: string[] = JSON.parse(jsonMatch[0]);
+
+    return selectedIds;
+  });
+
+  if (Result.isError(result)) {
+    console.error("Failed to curate news:", result.error);
+    return articles.slice(0, MAX_CURATED_ARTICLES);
+  }
+
+  const selectedIds = result.value;
+  const curatedArticles = selectedIds
+    .map((id) => articles.find((article) => article.id === id))
+    .filter((article): article is NewsArticle => article !== undefined);
+
+  return curatedArticles.slice(0, MAX_CURATED_ARTICLES);
 }
