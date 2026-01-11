@@ -1,5 +1,5 @@
 import * as v from "valibot";
-import { CategorySchema } from "~/features/news/types/schemas";
+import { CategorySchema } from "~/features/news/types/news-schemas";
 
 export const NewsSearchParamsSchema = v.object({
   category: v.optional(CategorySchema, "all"),

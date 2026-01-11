@@ -1,6 +1,18 @@
 import { Card, Text, Badge, Group, Anchor, Stack, type MantineColor } from "@mantine/core";
-import { CATEGORY_LABELS, SOURCE_LABELS } from "~/features/news/constants";
-import type { NewsArticle, Category, Source } from "~/features/news/types/schemas";
+import { CATEGORY_LABELS, SOURCE_LABELS } from "~/features/news/constants/news";
+import type { NewsArticle, Category, Source } from "~/features/news/types/news-schemas";
+
+function getRankColor(rank: number) {
+  if (rank <= 3) {
+    return "yellow";
+  }
+
+  if (rank <= 10) {
+    return "cyan";
+  }
+
+  return "gray";
+}
 
 const CATEGORY_COLORS = {
   all: "gray",
@@ -31,6 +43,17 @@ export function NewsCard({ article }: Record<"article", NewsArticle>) {
       <Stack gap="sm">
         <Group justify="space-between">
           <Group gap="xs">
+            {article.rank && (
+              <Badge
+                color={getRankColor(article.rank)}
+                variant="filled"
+                size="lg"
+                fw={700}
+                style={{ minWidth: 40 }}
+              >
+                #{article.rank}
+              </Badge>
+            )}
             <Badge color={CATEGORY_COLORS[article.category]} variant="light">
               {CATEGORY_LABELS[article.category]}
             </Badge>

@@ -1,18 +1,15 @@
 import { gateway, generateText } from "ai";
 import { all } from "better-all";
 import { Result } from "better-result";
-import type { Category, NewsArticle } from "~/features/news/types/schemas";
+import { MAX_ARTICLES_TO_SUMMARIZE, MAX_SEARCH_RESULTS } from "~/features/news/constants/news";
+import type { Category, NewsArticle } from "~/features/news/types/news-schemas";
 
 type SearchResult = Pick<NewsArticle, "title" | "source"> & Record<"content" | "url", string>;
 
 //? Vercel AI Gateway model IDs
 //? See: https://vercel.com/ai-gateway/models
-const GROK_SEARCH_MODEL = "xai/grok-4-fast-non-reasoning" as const;
-const GROK_SUMMARIZE_MODEL = "xai/grok-4.1-fast-non-reasoning" as const;
-
-// Limits for performance optimization
-const MAX_SEARCH_RESULTS = 5;
-const MAX_ARTICLES_TO_SUMMARIZE = 15;
+const GROK_SEARCH_MODEL = "xai/grok-4-fast-non-reasoning";
+const GROK_SUMMARIZE_MODEL = "xai/grok-4.1-fast-non-reasoning";
 
 const SEARCH_TOPICS = [
   // AI (10件目標)
@@ -71,22 +68,23 @@ Important: All text output must be in Japanese.`,
     `You are a senior tech editor curating a daily newsletter for software engineers.
 
 From the following articles, select exactly 20 that engineers MUST know about.
+Rank them from 1 (most important) to 20 (least important among selected).
 
-Selection criteria (in priority order):
-1. AI/LLM announcements and developments (highest priority)
-2. Frontend framework releases (React, Vue, Svelte, Angular, UI libraries)
-3. Backend framework/runtime updates (Go, Rust, Python, Node.js, Hono)
-4. Infrastructure services (DBaaS, BaaS, Convex, Turso, Supabase, Docker, K8s)
-5. Mobile development (React Native, Flutter, Swift, Kotlin)
-6. Breaking changes or security vulnerabilities
+Selection and ranking criteria (in priority order):
+1. AI/LLM announcements and developments (highest priority - typically rank 1-5)
+2. Frontend framework releases (React, Vue, Svelte, Angular, UI libraries - typically rank 6-10)
+3. Backend framework/runtime updates (Go, Rust, Python, Node.js, Hono - typically rank 11-14)
+4. Infrastructure services (DBaaS, BaaS, Convex, Turso, Supabase, Docker, K8s - typically rank 15-17)
+5. Mobile development (React Native, Flutter, Swift, Kotlin - typically rank 18-20)
+6. Breaking changes or security vulnerabilities (can boost any article to top 5)
 
 Articles:
 ${articlesJson}
 
-Respond with a JSON array of the selected article IDs in order of importance:
+Respond with a JSON array of the selected article IDs in order of importance (rank 1 first):
 ["id1", "id2", "id3", ...]
 
-Return exactly 20 IDs. If fewer than 20 articles are provided, return all of them.`,
+Return exactly 20 IDs in ranked order. If fewer than 20 articles are provided, return all of them in ranked order.`,
 };
 
 export async function fetchFromX() {
@@ -277,8 +275,12 @@ export async function fetchAndSummarizeNews() {
 const MAX_CURATED_ARTICLES = 20;
 
 export async function curateNews(articles: NewsArticle[]): Promise<NewsArticle[]> {
+  // 20件以下の場合もランキングを付与
   if (articles.length <= MAX_CURATED_ARTICLES) {
-    return articles;
+    return articles.map((article, index) => ({
+      ...article,
+      rank: index + 1,
+    }));
   }
 
   const articlesForCuration = articles.map((article) => ({
@@ -308,13 +310,23 @@ export async function curateNews(articles: NewsArticle[]): Promise<NewsArticle[]
 
   if (Result.isError(result)) {
     console.error("Failed to curate news:", result.error);
-    return articles.slice(0, MAX_CURATED_ARTICLES);
+    return articles.slice(0, MAX_CURATED_ARTICLES).map((article, index) => ({
+      ...article,
+      rank: index + 1,
+    }));
   }
 
   const selectedIds = result.value;
-  const curatedArticles = selectedIds
-    .map((id) => articles.find((article) => article.id === id))
-    .filter((article): article is NewsArticle => article !== undefined);
+
+  const curatedArticles: NewsArticle[] = [];
+
+  for (const [index, id] of selectedIds.entries()) {
+    const article = articles.find((a) => a.id === id);
+
+    if (article) {
+      curatedArticles.push({ ...article, rank: index + 1 });
+    }
+  }
 
   return curatedArticles.slice(0, MAX_CURATED_ARTICLES);
 }

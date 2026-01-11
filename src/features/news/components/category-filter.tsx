@@ -1,7 +1,7 @@
 import { SegmentedControl, Group, Text } from "@mantine/core";
 import { getRouteApi } from "@tanstack/react-router";
-import { CATEGORY_LABELS } from "~/features/news/constants";
-import type { Category } from "~/features/news/types/schemas";
+import { CATEGORY_LABELS } from "~/features/news/constants/news";
+import type { Category } from "~/features/news/types/news-schemas";
 
 export function CategoryFilter() {
   const routeAPi = getRouteApi("/");

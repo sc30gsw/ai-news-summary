@@ -19,6 +19,7 @@ export const NewsArticleSchema = v.object({
   fetchedAt: v.string(),
   citations: v.optional(v.array(v.string())),
   feedName: v.optional(v.string()),
+  rank: v.optional(v.number()),
 });
 
 export type NewsArticle = v.InferOutput<typeof NewsArticleSchema>;

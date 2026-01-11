@@ -1,6 +1,7 @@
 import { Result } from "better-result";
 import Parser from "rss-parser";
-import type { NewsArticle } from "~/features/news/types/schemas";
+import { MAX_ITEMS_PER_FEED, MAX_RSS_ARTICLES_TO_SUMMARIZE } from "~/features/news/constants/news";
+import type { NewsArticle } from "~/features/news/types/news-schemas";
 import { summarizeArticle } from "~/lib/ai";
 
 const parser = new Parser();
@@ -10,10 +11,6 @@ type RSSFeed = {
   url: string;
   language: "ja" | "en";
 };
-
-// Limits for performance optimization
-const MAX_ITEMS_PER_FEED = 5;
-const MAX_RSS_ARTICLES_TO_SUMMARIZE = 10;
 
 const RSS_FEEDS = [
   { name: "Zenn", url: "https://zenn.dev/feed", language: "ja" },

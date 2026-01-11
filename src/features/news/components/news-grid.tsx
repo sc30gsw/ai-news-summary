@@ -1,5 +1,5 @@
 import { SimpleGrid, Text, Center, Loader, Stack } from "@mantine/core";
-import type { NewsArticle } from "~/features/news/types/schemas";
+import type { NewsArticle } from "~/features/news/types/news-schemas";
 import { NewsCard } from "./news-card";
 
 type NewsGridProps = {
