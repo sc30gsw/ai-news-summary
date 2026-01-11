@@ -1,40 +1,13 @@
 import { gateway, generateText } from "ai";
 import { Result } from "better-result";
-import { MAX_ARTICLES_TO_SUMMARIZE, MAX_SEARCH_RESULTS } from "~/features/news/constants/news";
-import type { Category, NewsArticle } from "~/features/news/types/news-schemas";
-
-type SearchResult = Pick<NewsArticle, "title" | "source"> & Record<"content" | "url", string>;
+import type { Category, NewsArticle, Source } from "~/features/news/types/news-schemas";
 
 //? Vercel AI Gateway model IDs
 //? See: https://vercel.com/ai-gateway/models
-const GROK_SEARCH_MODEL = "xai/grok-4-fast-non-reasoning";
-const GROK_SUMMARIZE_MODEL = "xai/grok-4.1-fast-non-reasoning";
-
-const SEARCH_TOPICS = [
-  // AI (10件目標)
-  "AI LLM GPT Claude OpenAI Anthropic machine learning",
-  // Frontend (8件目標)
-  "React Vue Svelte Angular frontend UI component library",
-  // Backend (6件目標)
-  "Go Rust Python Node.js backend API microservices",
-  // Infra (6件目標)
-  "Convex Turso Supabase Neon PlanetScale Docker Kubernetes cloud",
-  // Mobile (5件目標)
-  "React Native Flutter Swift Kotlin iOS Android mobile",
-] as const satisfies readonly string[];
+const AI_MODEL = "google/gemini-3-flash";
 
 const PROMPTS = {
-  searchWeb: (topic: string) =>
-    `Search the web for the latest news about: ${topic}.
-Return the most recent and relevant articles from tech blogs and news sites.
-Focus on announcements, tutorials, and industry trends from the last week.
-Respond in Japanese.`,
-
-  summarize: (
-    title: SearchResult["title"],
-    url: SearchResult["url"],
-    content: SearchResult["content"],
-  ) =>
+  summarize: (title: string, url: string, content: string) =>
     `Summarize the following article in Japanese.
 
 Title: ${title}
@@ -81,85 +54,27 @@ Respond with a JSON array of the selected article IDs in order of importance (ra
 Return exactly 50 IDs in ranked order. If fewer than 50 articles are provided, return all of them in ranked order.`,
 };
 
-export async function fetchFromWeb() {
-  const results: SearchResult[] = [];
-
-  for (const topic of SEARCH_TOPICS) {
-    const result = await Result.tryPromise(async () => {
-      const { text, sources } = await generateText({
-        model: gateway(GROK_SEARCH_MODEL),
-        prompt: PROMPTS.searchWeb(topic),
-        providerOptions: {
-          xai: {
-            searchParameters: {
-              mode: "on",
-              returnCitations: true,
-              maxSearchResults: MAX_SEARCH_RESULTS,
-              sources: [
-                {
-                  type: "web",
-                  allowedWebsites: ["dev.to", "medium.com", "vercel.com"],
-                },
-                {
-                  type: "news",
-                },
-              ],
-            },
-          },
-        },
-      });
-
-      return { text, sources };
-    });
-
-    if (Result.isError(result)) {
-      console.error(`Failed to fetch web results for ${topic}:`, result.error);
-
-      continue;
-    }
-
-    const { text, sources } = result.value;
-
-    if (sources && Array.isArray(sources)) {
-      for (const source of sources) {
-        if ("url" in source && "title" in source) {
-          results.push({
-            title: source.title || topic,
-            url: source.url,
-            content: text,
-            source: "web",
-          });
-        }
-      }
-    }
-  }
-
-  return results;
-}
-
 export async function summarizeArticle(
-  title: SearchResult["title"],
-  content: SearchResult["content"],
-  url: SearchResult["url"],
-  source: SearchResult["source"],
+  title: string,
+  content: string,
+  url: string,
+  source: Source,
   feedName?: string,
 ) {
   const { text } = await generateText({
-    model: gateway(GROK_SUMMARIZE_MODEL),
+    model: gateway(AI_MODEL),
     prompt: PROMPTS.summarize(title, url, content),
   });
 
   const jsonMatch = text.match(/\{[\s\S]*\}/);
-  const parseResult: Result<
-    { title: SearchResult["title"]; summary: NewsArticle["summary"]; category: Category },
-    Error
-  > = Result.try(() => {
-    if (!jsonMatch) {
-      throw new Error("No JSON found in response");
-    }
+  const parseResult: Result<{ title: string; summary: string; category: Category }, Error> =
+    Result.try(() => {
+      if (!jsonMatch) {
+        throw new Error("No JSON found in response");
+      }
 
-    return JSON.parse(jsonMatch[0]);
-  });
+      return JSON.parse(jsonMatch[0]);
+    });
 
   const parsed = parseResult.unwrapOr({
     title: title,
@@ -178,31 +93,6 @@ export async function summarizeArticle(
     fetchedAt: new Date().toISOString(),
     feedName,
   } as const satisfies NewsArticle;
-}
-
-export async function fetchAndSummarizeNews() {
-  const webResults = await fetchFromWeb().catch(() => [] as SearchResult[]);
-
-  const uniqueResults = webResults.filter(
-    (result, index, self) => index === self.findIndex((r) => r.url === result.url),
-  );
-
-  const articles: NewsArticle[] = [];
-
-  for (const result of uniqueResults.slice(0, MAX_ARTICLES_TO_SUMMARIZE)) {
-    const articleResult = await Result.tryPromise(async () => {
-      return await summarizeArticle(result.title, result.content, result.url, result.source);
-    });
-
-    if (Result.isError(articleResult)) {
-      console.error(`Failed to summarize article: ${result.title}`, articleResult.error);
-      continue;
-    }
-
-    articles.push(articleResult.value);
-  }
-
-  return articles;
 }
 
 //? 全体で約50件（カテゴリごと約10件 × 5カテゴリ）
@@ -239,7 +129,7 @@ export async function curateNews(articles: NewsArticle[]) {
 
   const result = await Result.tryPromise(async () => {
     const { text } = await generateText({
-      model: gateway(GROK_SUMMARIZE_MODEL),
+      model: gateway(AI_MODEL),
       prompt: PROMPTS.curate(JSON.stringify(articlesForCuration)),
     });
 
