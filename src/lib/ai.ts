@@ -1,5 +1,4 @@
 import { gateway, generateText } from "ai";
-import { all } from "better-all";
 import { Result } from "better-result";
 import { MAX_ARTICLES_TO_SUMMARIZE, MAX_SEARCH_RESULTS } from "~/features/news/constants/news";
 import type { Category, NewsArticle } from "~/features/news/types/news-schemas";
@@ -240,18 +239,9 @@ export async function summarizeArticle(
 }
 
 export async function fetchAndSummarizeNews() {
-  const { xResults, webResults } = await all({
-    async xResults() {
-      return fetchFromX().catch(() => [] as SearchResult[]);
-    },
-    async webResults() {
-      return fetchFromWeb().catch(() => [] as SearchResult[]);
-    },
-  });
+  const webResults = await fetchFromWeb().catch(() => [] as SearchResult[]);
 
-  const allResults = [...xResults, ...webResults];
-
-  const uniqueResults = allResults.filter(
+  const uniqueResults = webResults.filter(
     (result, index, self) => index === self.findIndex((r) => r.url === result.url),
   );
 

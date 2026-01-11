@@ -2,7 +2,6 @@ import { Elysia } from "elysia";
 import { openapi } from "@elysiajs/openapi";
 import { createFileRoute } from "@tanstack/react-router";
 import { cronPlugin } from "~/features/cron";
-import { newsPlugin } from "~/features/news/api";
 
 const app = new Elysia({ prefix: "/api" })
   .use(
@@ -14,14 +13,10 @@ const app = new Elysia({ prefix: "/api" })
           version: "1.0.0",
           description: "API for managing news",
         },
-        tags: [
-          { name: "News", description: "News operations" },
-          { name: "Cron", description: "Cron job operations" },
-        ],
+        tags: [{ name: "Cron", description: "Cron job operations" }],
       },
     }),
   )
-  .use(newsPlugin)
   .use(cronPlugin);
 
 const handle = ({ request }: { request: Request }) => {

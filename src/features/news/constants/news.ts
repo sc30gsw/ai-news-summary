@@ -17,7 +17,8 @@ export const SOURCE_LABELS = {
 
 //? Limits for performance optimization
 //? カテゴリごと約10件を目標（5カテゴリ × 10 = 50件）
-export const MAX_ITEMS_PER_FEED = 8;
-export const MAX_RSS_ARTICLES_TO_SUMMARIZE = 20;
-export const MAX_SEARCH_RESULTS = 8;
-export const MAX_ARTICLES_TO_SUMMARIZE = 30;
+//? xAI APIが不安定なため、RSSをメインソースとして多めに取得
+export const MAX_ITEMS_PER_FEED = 15;
+export const MAX_RSS_ARTICLES_TO_SUMMARIZE = 60;
+export const MAX_SEARCH_RESULTS = 10;
+export const MAX_ARTICLES_TO_SUMMARIZE = 40;
