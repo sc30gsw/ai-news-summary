@@ -1,3 +1,4 @@
+import { format } from "@formkit/tempo";
 import { Card, Text, Badge, Group, Anchor, Stack, type MantineColor } from "@mantine/core";
 import { CATEGORY_LABELS, SOURCE_LABELS } from "~/features/news/constants/news";
 import type { NewsArticle, Category, Source } from "~/features/news/types/news-schemas";
@@ -30,13 +31,7 @@ const SOURCE_COLORS = {
 } as const satisfies Record<Source, MantineColor>;
 
 export function NewsCard({ article }: Record<"article", NewsArticle>) {
-  const formattedDate = new Date(article.fetchedAt).toLocaleDateString("ja-JP", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const formattedDate = format(article.fetchedAt, { date: "medium", time: "short" }, "ja");
 
   return (
     <Card shadow="sm" padding="lg" radius="md" withBorder>

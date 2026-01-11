@@ -19,6 +19,7 @@
     "@ai-sdk/xai": "^3.0.13",
     "@elysiajs/openapi": "^1.4.13",
     "@emotion/react": "^11.14.0",
+    "@formkit/tempo": "^1.0.0",
     "@mantine/core": "^8.3.12",
     "@mantine/hooks": "^8.3.12",
     "@tanstack/react-router": "^1.147.1",
