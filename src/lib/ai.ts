@@ -67,16 +67,17 @@ Important: All text output must be in Japanese.`,
   curate: (articlesJson: string) =>
     `You are a senior tech editor curating a daily newsletter for software engineers.
 
-From the following articles, select exactly 20 that engineers MUST know about.
-Rank them from 1 (most important) to 20 (least important among selected).
+From the following articles, select exactly 50 that engineers MUST know about.
+Select about 10 articles per category to ensure balanced coverage.
+Rank them from 1 (most important) to 50 (least important among selected).
 
 Selection and ranking criteria (in priority order):
-1. AI/LLM announcements and developments (highest priority - typically rank 1-5)
-2. Frontend framework releases (React, Vue, Svelte, Angular, UI libraries - typically rank 6-10)
-3. Backend framework/runtime updates (Go, Rust, Python, Node.js, Hono - typically rank 11-14)
-4. Infrastructure services (DBaaS, BaaS, Convex, Turso, Supabase, Docker, K8s - typically rank 15-17)
-5. Mobile development (React Native, Flutter, Swift, Kotlin - typically rank 18-20)
-6. Breaking changes or security vulnerabilities (can boost any article to top 5)
+1. AI/LLM announcements and developments (highest priority - select ~10 articles)
+2. Frontend framework releases (React, Vue, Svelte, Angular, UI libraries - select ~10 articles)
+3. Backend framework/runtime updates (Go, Rust, Python, Node.js, Hono - select ~10 articles)
+4. Infrastructure services (DBaaS, BaaS, Convex, Turso, Supabase, Docker, K8s - select ~10 articles)
+5. Mobile development (React Native, Flutter, Swift, Kotlin - select ~10 articles)
+6. Breaking changes or security vulnerabilities (can boost any article to top 10)
 
 Articles:
 ${articlesJson}
@@ -84,7 +85,7 @@ ${articlesJson}
 Respond with a JSON array of the selected article IDs in order of importance (rank 1 first):
 ["id1", "id2", "id3", ...]
 
-Return exactly 20 IDs in ranked order. If fewer than 20 articles are provided, return all of them in ranked order.`,
+Return exactly 50 IDs in ranked order. If fewer than 50 articles are provided, return all of them in ranked order.`,
 };
 
 export async function fetchFromX() {
@@ -272,15 +273,28 @@ export async function fetchAndSummarizeNews() {
   return articles;
 }
 
-const MAX_CURATED_ARTICLES = 20;
+//? 全体で約50件（カテゴリごと約10件 × 5カテゴリ）
+const MAX_CURATED_ARTICLES = 50;
 
-export async function curateNews(articles: NewsArticle[]): Promise<NewsArticle[]> {
-  // 20件以下の場合もランキングを付与
+function assignCategoryRanks(articles: NewsArticle[]) {
+  const categoryCounters: Record<string, number> = {};
+
+  return articles.map((article) => {
+    const category = article.category;
+    categoryCounters[category] = (categoryCounters[category] || 0) + 1;
+
+    return { ...article, categoryRank: categoryCounters[category] };
+  });
+}
+
+export async function curateNews(articles: NewsArticle[]) {
   if (articles.length <= MAX_CURATED_ARTICLES) {
-    return articles.map((article, index) => ({
+    const rankedArticles = articles.map((article, index) => ({
       ...article,
       rank: index + 1,
     }));
+
+    return assignCategoryRanks(rankedArticles);
   }
 
   const articlesForCuration = articles.map((article) => ({
@@ -310,14 +324,15 @@ export async function curateNews(articles: NewsArticle[]): Promise<NewsArticle[]
 
   if (Result.isError(result)) {
     console.error("Failed to curate news:", result.error);
-    return articles.slice(0, MAX_CURATED_ARTICLES).map((article, index) => ({
+    const fallbackArticles = articles.slice(0, MAX_CURATED_ARTICLES).map((article, index) => ({
       ...article,
       rank: index + 1,
     }));
+
+    return assignCategoryRanks(fallbackArticles);
   }
 
   const selectedIds = result.value;
-
   const curatedArticles: NewsArticle[] = [];
 
   for (const [index, id] of selectedIds.entries()) {
@@ -328,5 +343,5 @@ export async function curateNews(articles: NewsArticle[]): Promise<NewsArticle[]
     }
   }
 
-  return curatedArticles.slice(0, MAX_CURATED_ARTICLES);
+  return assignCategoryRanks(curatedArticles.slice(0, MAX_CURATED_ARTICLES));
 }

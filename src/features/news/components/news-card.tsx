@@ -50,7 +50,9 @@ export function NewsCard({ article }: Record<"article", NewsArticle>) {
               </Badge>
             )}
             <Badge color={CATEGORY_COLORS[article.category]} variant="light">
-              {CATEGORY_LABELS[article.category]}
+              {article.categoryRank
+                ? `${CATEGORY_LABELS[article.category]} #${article.categoryRank}`
+                : CATEGORY_LABELS[article.category]}
             </Badge>
             <Badge color={SOURCE_COLORS[article.source]} variant="outline" size="sm">
               {article.feedName ?? SOURCE_LABELS[article.source]}
