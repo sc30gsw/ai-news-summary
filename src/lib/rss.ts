@@ -22,10 +22,21 @@ type RSSFeed = {
 };
 
 const RSS_FEEDS = [
-  { name: "Zenn", url: "https://zenn.dev/feed", language: "ja" },
+  //? General
   { name: "Dev.to", url: "https://dev.to/feed", language: "en" },
-  { name: "Qiita", url: "https://qiita.com/popular-items/feed", language: "ja" },
+  { name: "Hacker News", url: "https://hnrss.org/frontpage", language: "en" },
+  { name: "Lobsters", url: "https://lobste.rs/rss", language: "en" },
+  //? Frontend
   { name: "CSS-Tricks", url: "https://css-tricks.com/feed/", language: "en" },
+  { name: "Smashing Magazine", url: "https://www.smashingmagazine.com/feed/", language: "en" },
+  //? Mobile
+  { name: "React Native", url: "https://reactnative.dev/blog/rss.xml", language: "en" },
+  { name: "Flutter", url: "https://medium.com/feed/flutter", language: "en" },
+  //? Infra / BaaS / DBaaS
+  { name: "Vercel Blog", url: "https://vercel.com/atom", language: "en" },
+  { name: "Supabase Blog", url: "https://supabase.com/blog/rss.xml", language: "en" },
+  { name: "Convex Blog", url: "https://blog.convex.dev/rss/", language: "en" },
+  { name: "Turso Blog", url: "https://turso.tech/blog/rss.xml", language: "en" },
 ] as const satisfies readonly RSSFeed[];
 
 async function fetchFeed(feed: RSSFeed) {
