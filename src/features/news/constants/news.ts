@@ -13,8 +13,3 @@ export const SOURCE_LABELS = {
   web: "Web",
   rss: "RSS",
 } as const satisfies Record<Source, string>;
-
-//? Limits for performance optimization
-//? カテゴリごと約10件を目標（5カテゴリ × 10 = 50件）
-export const MAX_ITEMS_PER_FEED = 15;
-export const MAX_RSS_ARTICLES_TO_SUMMARIZE = 60;

@@ -1,12 +1,17 @@
 import { Result } from "better-result";
 import pLimit from "p-limit";
 import Parser from "rss-parser";
-import { MAX_ITEMS_PER_FEED, MAX_RSS_ARTICLES_TO_SUMMARIZE } from "~/features/news/constants/news";
 import type { NewsArticle } from "~/features/news/types/news-schemas";
 import { summarizeArticle } from "~/lib/ai";
 
 //? 並列処理の同時実行数（API rate limit考慮）
-const CONCURRENCY_LIMIT = 5;
+const CONCURRENCY_LIMIT = 3;
+
+//? Limits for performance optimization
+//? カテゴリごと約4件を目標（5カテゴリ × 4 = 20件）
+//? API呼び出し削減のため要約数も制限
+const MAX_ITEMS_PER_FEED = 8;
+const MAX_RSS_ARTICLES_TO_SUMMARIZE = 25;
 
 const parser = new Parser();
 
