@@ -4,7 +4,8 @@ import type { Category, NewsArticle, Source } from "~/features/news/types/news-s
 
 //? Vercel AI Gateway model IDs
 //? See: https://vercel.com/ai-gateway/models
-const AI_MODEL = "google/gemini-3-flash";
+//? Using cheaper model to maximize $5 free credits
+const AI_MODEL = "groq/llama-3.3-70b-versatile";
 
 const PROMPTS = {
   summarize: (title: string, url: string, content: string) =>
