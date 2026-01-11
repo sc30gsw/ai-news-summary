@@ -29,6 +29,7 @@
     "better-all": "^0.0.1",
     "better-result": "^1.0.0",
     "elysia": "^1.4.21",
+    "nitro": "^3.0.1-alpha.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "rss-parser": "^3.13.0",
