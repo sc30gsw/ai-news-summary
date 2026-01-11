@@ -1,8 +1,12 @@
 import { Result } from "better-result";
+import pLimit from "p-limit";
 import Parser from "rss-parser";
 import { MAX_ITEMS_PER_FEED, MAX_RSS_ARTICLES_TO_SUMMARIZE } from "~/features/news/constants/news";
 import type { NewsArticle } from "~/features/news/types/news-schemas";
 import { summarizeArticle } from "~/lib/ai";
+
+//? 並列処理の同時実行数（API rate limit考慮）
+const CONCURRENCY_LIMIT = 5;
 
 const parser = new Parser();
 
@@ -99,30 +103,35 @@ export async function fetchRSSFeeds() {
     return techKeywords.some((keyword) => text.includes(keyword));
   });
 
-  const articles: NewsArticle[] = [];
+  const limit = pLimit(CONCURRENCY_LIMIT);
 
-  for (const item of filteredItems.slice(0, MAX_RSS_ARTICLES_TO_SUMMARIZE)) {
-    const articleResult = await Result.tryPromise(async () => {
-      const article = await summarizeArticle(
-        item.title,
-        item.content,
-        item.link,
-        "rss",
-        item.feedName,
-      );
-      return {
-        ...article,
-        publishedAt: new Date(item.pubDate).toISOString(),
-      };
-    });
+  const articlePromises = filteredItems.slice(0, MAX_RSS_ARTICLES_TO_SUMMARIZE).map((item) =>
+    limit(async () => {
+      const articleResult = await Result.tryPromise(async () => {
+        const article = await summarizeArticle(
+          item.title,
+          item.content,
+          item.link,
+          "rss",
+          item.feedName,
+        );
+        return {
+          ...article,
+          publishedAt: new Date(item.pubDate).toISOString(),
+        };
+      });
 
-    if (Result.isError(articleResult)) {
-      console.error(`Failed to summarize RSS item: ${item.title}`, articleResult.error);
-      continue;
-    }
+      if (Result.isError(articleResult)) {
+        console.error(`Failed to summarize RSS item: ${item.title}`, articleResult.error);
+        return null;
+      }
 
-    articles.push(articleResult.value);
-  }
+      return articleResult.value;
+    }),
+  );
+
+  const results = await Promise.all(articlePromises);
+  const articles: NewsArticle[] = results.filter((article) => article !== null);
 
   return articles;
 }
