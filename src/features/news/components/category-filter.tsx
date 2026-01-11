@@ -10,7 +10,6 @@ export function CategoryFilter() {
   const navigate = routeAPi.useNavigate();
 
   const options = [
-    { label: "すべて", value: "all" },
     ...Object.entries(CATEGORY_LABELS).map(([key, label]) => ({
       label,
       value: key,

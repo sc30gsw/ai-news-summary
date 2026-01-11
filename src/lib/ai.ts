@@ -1,18 +1,65 @@
-import { xai } from "@ai-sdk/xai";
-import { generateText } from "ai";
+import { gateway, generateText } from "ai";
 import { all } from "better-all";
 import { Result } from "better-result";
 import type { Category, NewsArticle } from "~/features/news/types/schemas";
 
+type SearchResult = Pick<NewsArticle, "title" | "source"> & Record<"content" | "url", string>;
+
+//? Vercel AI Gateway model IDs
+//? See: https://vercel.com/ai-gateway/models
+const GROK_SEARCH_MODEL = "xai/grok-4-fast-non-reasoning" as const;
+const GROK_SUMMARIZE_MODEL = "xai/grok-4.1-fast-non-reasoning" as const;
+
+// Limits for performance optimization
+const MAX_SEARCH_RESULTS = 3;
+const MAX_ARTICLES_TO_SUMMARIZE = 8;
+
 const SEARCH_TOPICS = [
-  "AI artificial intelligence",
-  "React Next.js TanStack",
-  "TypeScript programming",
-  "Hono Elysia backend",
-  "web development trends",
+  "AI artificial intelligence LLM",
+  "React TypeScript frontend",
+  "backend Node.js Hono",
 ] as const satisfies readonly string[];
 
-type SearchResult = Pick<NewsArticle, "title" | "source"> & Record<"content" | "url", string>;
+const PROMPTS = {
+  searchX: (topic: string) =>
+    `Search X (Twitter) for the latest news and discussions about: ${topic}.
+Return the most relevant and recent posts from the last 24 hours.
+Focus on technical announcements, library releases, and developer insights.
+Respond in Japanese.`,
+
+  searchWeb: (topic: string) =>
+    `Search the web for the latest news about: ${topic}.
+Return the most recent and relevant articles from tech blogs and news sites.
+Focus on announcements, tutorials, and industry trends from the last week.
+Respond in Japanese.`,
+
+  summarize: (
+    title: SearchResult["title"],
+    url: SearchResult["url"],
+    content: SearchResult["content"],
+  ) =>
+    `Summarize the following article in Japanese.
+
+Title: ${title}
+URL: ${url}
+Content: ${content}
+
+Respond in the following JSON format:
+{
+  "title": "Japanese title",
+  "summary": "200-300 character summary in Japanese",
+  "category": "ai-ml" | "react-frontend" | "typescript" | "backend" | "tools" (choose one)
+}
+
+Category selection criteria:
+- ai-ml: AI, machine learning, LLM, ChatGPT related
+- react-frontend: React, Next.js, Vue, frontend related
+- typescript: TypeScript, type system related
+- backend: Node.js, Hono, Elysia, API, server-side related
+- tools: Development tools, libraries, others
+
+Important: All text output must be in Japanese.`,
+} as const;
 
 export async function fetchFromX() {
   const results: SearchResult[] = [];
@@ -20,16 +67,14 @@ export async function fetchFromX() {
   for (const topic of SEARCH_TOPICS) {
     const result = await Result.tryPromise(async () => {
       const { text, sources } = await generateText({
-        model: xai("grok-4.1"),
-        prompt: `Search X (Twitter) for the latest news and discussions about: ${topic}.
-                 Return the most relevant and recent posts from the last 24 hours.
-                 Focus on technical announcements, library releases, and developer insights.`,
+        model: gateway(GROK_SEARCH_MODEL),
+        prompt: PROMPTS.searchX(topic),
         providerOptions: {
           xai: {
             searchParameters: {
               mode: "on",
               returnCitations: true,
-              maxSearchResults: 5,
+              maxSearchResults: MAX_SEARCH_RESULTS,
               sources: [
                 {
                   type: "x",
@@ -74,16 +119,14 @@ export async function fetchFromWeb() {
   for (const topic of SEARCH_TOPICS) {
     const result = await Result.tryPromise(async () => {
       const { text, sources } = await generateText({
-        model: xai("grok-4.1"),
-        prompt: `Search the web for the latest news about: ${topic}.
-                 Return the most recent and relevant articles from tech blogs and news sites.
-                 Focus on announcements, tutorials, and industry trends from the last week.`,
+        model: gateway(GROK_SEARCH_MODEL),
+        prompt: PROMPTS.searchWeb(topic),
         providerOptions: {
           xai: {
             searchParameters: {
               mode: "on",
               returnCitations: true,
-              maxSearchResults: 5,
+              maxSearchResults: MAX_SEARCH_RESULTS,
               sources: [
                 {
                   type: "web",
@@ -132,26 +175,8 @@ export async function summarizeArticle(
   source: SearchResult["source"],
 ) {
   const { text } = await generateText({
-    model: xai("grok-4-1"),
-    prompt: `以下の記事を日本語で要約してください。
-
-タイトル: ${title}
-URL: ${url}
-内容: ${content}
-
-以下のJSON形式で回答してください:
-{
-  "title": "日本語のタイトル",
-  "summary": "200-300文字の日本語要約",
-  "category": "ai-ml" | "react-frontend" | "typescript" | "backend" | "tools" のいずれか
-}
-
-カテゴリの選択基準:
-- ai-ml: AI、機械学習、LLM、ChatGPT関連
-- react-frontend: React、Next.js、Vue、フロントエンド関連
-- typescript: TypeScript、型システム関連
-- backend: Node.js、Hono、Elysia、API、サーバーサイド関連
-- tools: 開発ツール、ライブラリ、その他`,
+    model: gateway(GROK_SUMMARIZE_MODEL),
+    prompt: PROMPTS.summarize(title, url, content),
   });
 
   const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -202,7 +227,7 @@ export async function fetchAndSummarizeNews() {
 
   const articles: NewsArticle[] = [];
 
-  for (const result of uniqueResults.slice(0, 20)) {
+  for (const result of uniqueResults.slice(0, MAX_ARTICLES_TO_SUMMARIZE)) {
     const articleResult = await Result.tryPromise(async () => {
       return await summarizeArticle(result.title, result.content, result.url, result.source);
     });

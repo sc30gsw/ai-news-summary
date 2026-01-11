@@ -55,9 +55,6 @@ export const Route = createFileRoute("/")({
   beforeLoad: ({ location }) => {
     return { href: location.href };
   },
-  loaderDeps: ({ search: { category } }) => ({
-    category,
-  }),
   loader: () => getNews(),
 });
 

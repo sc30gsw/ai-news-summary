@@ -11,26 +11,20 @@ type RSSFeed = {
   language: "ja" | "en";
 };
 
+// Limits for performance optimization
+const MAX_ITEMS_PER_FEED = 3;
+const MAX_RSS_ARTICLES_TO_SUMMARIZE = 5;
+
 const RSS_FEEDS = [
   { name: "Zenn", url: "https://zenn.dev/feed", language: "ja" },
-  {
-    name: "Qiita",
-    url: "https://qiita.com/popular-items/feed",
-    language: "ja",
-  },
   { name: "Dev.to", url: "https://dev.to/feed", language: "en" },
-  {
-    name: "Hacker News",
-    url: "https://hnrss.org/frontpage",
-    language: "en",
-  },
 ] as const satisfies readonly RSSFeed[];
 
 async function fetchFeed(feed: RSSFeed) {
   const result = await Result.tryPromise(async () => {
     const parsed = await parser.parseURL(feed.url);
 
-    return parsed.items.slice(0, 5).map((item) => ({
+    return parsed.items.slice(0, MAX_ITEMS_PER_FEED).map((item) => ({
       title: item.title || "No title",
       link: item.link || "",
       content: item.contentSnippet || item.content || "",
@@ -83,7 +77,7 @@ export async function fetchRSSFeeds() {
 
   const articles: NewsArticle[] = [];
 
-  for (const item of filteredItems.slice(0, 10)) {
+  for (const item of filteredItems.slice(0, MAX_RSS_ARTICLES_TO_SUMMARIZE)) {
     const articleResult = await Result.tryPromise(async () => {
       const article = await summarizeArticle(item.title, item.content, item.link, "rss");
       return {
