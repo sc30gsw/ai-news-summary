@@ -24,12 +24,6 @@ const SEARCH_TOPICS = [
 ] as const satisfies readonly string[];
 
 const PROMPTS = {
-  searchX: (topic: string) =>
-    `Search X (Twitter) for the latest news and discussions about: ${topic}.
-Return the most relevant and recent posts from the last 24 hours.
-Focus on technical announcements, library releases, and developer insights.
-Respond in Japanese.`,
-
   searchWeb: (topic: string) =>
     `Search the web for the latest news about: ${topic}.
 Return the most recent and relevant articles from tech blogs and news sites.
@@ -86,58 +80,6 @@ Respond with a JSON array of the selected article IDs in order of importance (ra
 
 Return exactly 50 IDs in ranked order. If fewer than 50 articles are provided, return all of them in ranked order.`,
 };
-
-export async function fetchFromX() {
-  const results: SearchResult[] = [];
-
-  for (const topic of SEARCH_TOPICS) {
-    const result = await Result.tryPromise(async () => {
-      const { text, sources } = await generateText({
-        model: gateway(GROK_SEARCH_MODEL),
-        prompt: PROMPTS.searchX(topic),
-        providerOptions: {
-          xai: {
-            searchParameters: {
-              mode: "on",
-              returnCitations: true,
-              maxSearchResults: MAX_SEARCH_RESULTS,
-              sources: [
-                {
-                  type: "x",
-                },
-              ],
-            },
-          },
-        },
-      });
-
-      return { text, sources };
-    });
-
-    if (Result.isError(result)) {
-      console.error(`Failed to fetch X results for ${topic}:`, result.error);
-
-      continue;
-    }
-
-    const { text, sources } = result.value;
-
-    if (sources && Array.isArray(sources)) {
-      for (const source of sources) {
-        if ("url" in source && "title" in source) {
-          results.push({
-            title: source.title || topic,
-            url: source.url,
-            content: text,
-            source: "x",
-          });
-        }
-      }
-    }
-  }
-
-  return results;
-}
 
 export async function fetchFromWeb() {
   const results: SearchResult[] = [];

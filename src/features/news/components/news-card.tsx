@@ -25,7 +25,6 @@ const CATEGORY_COLORS = {
 } as const satisfies Record<Category, MantineColor>;
 
 const SOURCE_COLORS = {
-  x: "dark",
   web: "indigo",
   rss: "teal",
 } as const satisfies Record<Source, MantineColor>;

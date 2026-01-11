@@ -10,7 +10,6 @@ export const CATEGORY_LABELS = {
 } as const satisfies Record<Category, string>;
 
 export const SOURCE_LABELS = {
-  x: "X (Twitter)",
   web: "Web",
   rss: "RSS",
 } as const satisfies Record<Source, string>;

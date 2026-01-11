@@ -4,7 +4,7 @@ export const CategorySchema = v.picklist(["all", "ai", "frontend", "backend", "i
 
 export type Category = v.InferOutput<typeof CategorySchema>;
 
-export const SourceSchema = v.picklist(["x", "web", "rss"]);
+export const SourceSchema = v.picklist(["web", "rss"]);
 
 export type Source = v.InferOutput<typeof SourceSchema>;
 
