@@ -11,8 +11,8 @@ const GROK_SEARCH_MODEL = "xai/grok-4-fast-non-reasoning" as const;
 const GROK_SUMMARIZE_MODEL = "xai/grok-4.1-fast-non-reasoning" as const;
 
 // Limits for performance optimization
-const MAX_SEARCH_RESULTS = 3;
-const MAX_ARTICLES_TO_SUMMARIZE = 8;
+const MAX_SEARCH_RESULTS = 5;
+const MAX_ARTICLES_TO_SUMMARIZE = 15;
 
 const SEARCH_TOPICS = [
   "AI artificial intelligence LLM",

@@ -12,12 +12,14 @@ type RSSFeed = {
 };
 
 // Limits for performance optimization
-const MAX_ITEMS_PER_FEED = 3;
-const MAX_RSS_ARTICLES_TO_SUMMARIZE = 5;
+const MAX_ITEMS_PER_FEED = 5;
+const MAX_RSS_ARTICLES_TO_SUMMARIZE = 10;
 
 const RSS_FEEDS = [
   { name: "Zenn", url: "https://zenn.dev/feed", language: "ja" },
   { name: "Dev.to", url: "https://dev.to/feed", language: "en" },
+  { name: "Qiita", url: "https://qiita.com/popular-items/feed", language: "ja" },
+  { name: "CSS-Tricks", url: "https://css-tricks.com/feed/", language: "en" },
 ] as const satisfies readonly RSSFeed[];
 
 async function fetchFeed(feed: RSSFeed) {
