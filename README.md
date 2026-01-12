@@ -12,30 +12,30 @@ AI・React・TypeScript・バックエンドなどの最新技術ニュースを
 
 ## 技術スタック
 
-| カテゴリ | 技術 |
-|---------|------|
+| カテゴリ       | 技術                                               |
+| -------------- | -------------------------------------------------- |
 | フロントエンド | TanStack Start, React 19, Mantine UI, Tailwind CSS |
-| バックエンド | Elysia, Nitro |
-| AI | Vercel AI SDK (google/gemini-3-flash) |
-| データ | Vercel KV |
-| バリデーション | Valibot |
-| ツール | Bun, Vite, OxLint |
+| バックエンド   | Elysia, Nitro                                      |
+| AI             | Vercel AI SDK (google/gemini-3-flash)              |
+| データ         | Vercel KV                                          |
+| バリデーション | Valibot                                            |
+| ツール         | Bun, Vite, OxLint                                  |
 
 ## RSS フィード一覧
 
-| カテゴリ | フィード名 | URL |
-|---------|-----------|-----|
-| 一般 | Dev.to | https://dev.to/feed |
-| 一般 | Hacker News | https://hnrss.org/frontpage |
-| 一般 | Lobsters | https://lobste.rs/rss |
-| Frontend | CSS-Tricks | https://css-tricks.com/feed/ |
+| カテゴリ | フィード名        | URL                                    |
+| -------- | ----------------- | -------------------------------------- |
+| 一般     | Dev.to            | https://dev.to/feed                    |
+| 一般     | Hacker News       | https://hnrss.org/frontpage            |
+| 一般     | Lobsters          | https://lobste.rs/rss                  |
+| Frontend | CSS-Tricks        | https://css-tricks.com/feed/           |
 | Frontend | Smashing Magazine | https://www.smashingmagazine.com/feed/ |
-| Mobile | React Native | https://reactnative.dev/blog/rss.xml |
-| Mobile | Flutter | https://medium.com/feed/flutter |
-| Infra | Vercel Blog | https://vercel.com/atom |
-| Infra | Supabase Blog | https://supabase.com/blog/rss.xml |
-| Infra | Convex Blog | https://blog.convex.dev/rss/ |
-| Infra | Turso Blog | https://turso.tech/blog/rss.xml |
+| Mobile   | React Native      | https://reactnative.dev/blog/rss.xml   |
+| Mobile   | Flutter           | https://medium.com/feed/flutter        |
+| Infra    | Vercel Blog       | https://vercel.com/atom                |
+| Infra    | Supabase Blog     | https://supabase.com/blog/rss.xml      |
+| Infra    | Convex Blog       | https://blog.convex.dev/rss/           |
+| Infra    | Turso Blog        | https://turso.tech/blog/rss.xml        |
 
 ## セットアップ
 
@@ -77,13 +77,13 @@ http://localhost:5173 でアクセスできます。
 
 ## 開発スクリプト
 
-| コマンド | 説明 |
-|---------|------|
-| `bun run dev` | 開発サーバー起動 |
-| `bun run build` | プロダクションビルド |
-| `bun run start` | ビルド後のプレビュー |
-| `bun run check` | 型チェック (OxLint) |
-| `bun run lint` | リント |
+| コマンド          | 説明                   |
+| ----------------- | ---------------------- |
+| `bun run dev`     | 開発サーバー起動       |
+| `bun run build`   | プロダクションビルド   |
+| `bun run start`   | ビルド後のプレビュー   |
+| `bun run check`   | 型チェック (OxLint)    |
+| `bun run lint`    | リント                 |
 | `bun run fmt:fix` | コード自動フォーマット |
 
 ## プロジェクト構成
@@ -114,9 +114,9 @@ src/
 
 ## API エンドポイント
 
-| メソッド | パス | 説明 |
-|---------|------|------|
-| GET | `/api/cron/fetch-news` | RSS フィードから記事を取得し、AI でキュレーション |
+| メソッド | パス                   | 説明                                              |
+| -------- | ---------------------- | ------------------------------------------------- |
+| GET      | `/api/cron/fetch-news` | RSS フィードから記事を取得し、AI でキュレーション |
 
 レスポンス例:
 
