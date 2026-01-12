@@ -30,14 +30,17 @@ Category selection criteria:
 
 Important: All text output must be in Japanese.`,
 
-  curate: (articlesJson: string) =>
-    `You are a senior tech editor curating a daily newsletter for software engineers.
+  curate: (articlesJson: string, existingNewsJson?: string) => {
+    const existingNewsSection = existingNewsJson
+      ? `\n\nCRITICAL EXCLUSION RULE: The following articles have already been published in previous newsletters. You MUST NOT select any of these articles under any circumstances. Compare the URL or title carefully to avoid duplicates. If you select any of these existing articles, your selection will be invalid:\n${existingNewsJson}\n\nIMPORTANT: Only select NEW articles that are NOT in the exclusion list above.`
+      : "";
 
-From the following articles, select exactly 20 that engineers MUST know about.
-IMPORTANT: Ensure at least 1 article from EACH category (ai, frontend, backend, infra, mobile).
-Distribute remaining 15 articles based on importance and quality.
-Rank them from 1 (most important) to 20.
+    return `You are a senior tech editor curating a daily newsletter for software engineers.
 
+From the following articles, select exactly 20 NEW articles that engineers MUST know about.
+IMPORTANT: Ensure at least 1 article from EACH category (ai, frontend, backend, infra, mobile) if available.
+Distribute remaining articles based on importance and quality.
+Rank them from 1 (most important) to 20.${existingNewsSection}
 Selection and ranking criteria (in priority order):
 1. AI/LLM announcements and developments (highest priority - select 3-5 articles)
 2. Frontend framework releases (React, Vue, Svelte, Angular, UI libraries - select 3-5 articles)
@@ -52,7 +55,8 @@ ${articlesJson}
 Respond with a JSON array of the selected article IDs in order of importance (rank 1 first):
 ["id1", "id2", "id3", ...]
 
-Return exactly 20 IDs in ranked order. If fewer than 20 articles are provided, return all of them in ranked order.`,
+IMPORTANT: Select exactly 20 articles if 20 or more are available. If fewer than 20 articles are provided, return all available articles in ranked order. Only select NEW articles that are NOT in the exclusion list.`;
+  },
 };
 
 export async function summarizeArticle(
@@ -110,9 +114,17 @@ function assignCategoryRanks(articles: NewsArticle[]) {
   });
 }
 
-export async function curateNews(articles: NewsArticle[]) {
-  if (articles.length <= MAX_CURATED_ARTICLES) {
-    const rankedArticles = articles.map((article, index) => ({
+export async function curateNews(articles: NewsArticle[], existingNews?: NewsArticle[]) {
+  const existingUrls = new Set(existingNews?.map((article) => article.originalUrl) ?? []);
+
+  const newArticles = articles.filter((article) => !existingUrls.has(article.originalUrl));
+
+  if (newArticles.length === 0) {
+    return [];
+  }
+
+  if (newArticles.length <= MAX_CURATED_ARTICLES) {
+    const rankedArticles = newArticles.map((article, index) => ({
       ...article,
       rank: index + 1,
     }));
@@ -120,18 +132,27 @@ export async function curateNews(articles: NewsArticle[]) {
     return assignCategoryRanks(rankedArticles);
   }
 
-  const articlesForCuration = articles.map((article) => ({
+  const articlesForCuration = newArticles.map((article) => ({
     id: article.id,
     title: article.title,
     summary: article.summary,
     category: article.category,
     source: article.source,
+    originalUrl: article.originalUrl,
+  }));
+
+  const existingNewsForPrompt = existingNews?.map((article) => ({
+    title: article.title,
+    url: article.originalUrl,
   }));
 
   const result = await Result.tryPromise(async () => {
     const { text } = await generateText({
       model: gateway(AI_MODEL),
-      prompt: PROMPTS.curate(JSON.stringify(articlesForCuration)),
+      prompt: PROMPTS.curate(
+        JSON.stringify(articlesForCuration),
+        existingNewsForPrompt ? JSON.stringify(existingNewsForPrompt) : undefined,
+      ),
     });
 
     const jsonMatch = text.match(/\[[\s\S]*\]/);
@@ -147,7 +168,7 @@ export async function curateNews(articles: NewsArticle[]) {
 
   if (Result.isError(result)) {
     console.error("Failed to curate news:", result.error);
-    const fallbackArticles = articles.slice(0, MAX_CURATED_ARTICLES).map((article, index) => ({
+    const fallbackArticles = newArticles.slice(0, MAX_CURATED_ARTICLES).map((article, index) => ({
       ...article,
       rank: index + 1,
     }));
@@ -159,9 +180,9 @@ export async function curateNews(articles: NewsArticle[]) {
   const curatedArticles: NewsArticle[] = [];
 
   for (const [index, id] of selectedIds.entries()) {
-    const article = articles.find((a) => a.id === id);
+    const article = newArticles.find((a) => a.id === id);
 
-    if (article) {
+    if (article && !existingUrls.has(article.originalUrl)) {
       curatedArticles.push({ ...article, rank: index + 1 });
     }
   }
