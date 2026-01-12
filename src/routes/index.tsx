@@ -1,3 +1,4 @@
+import { format, parse } from "@formkit/tempo";
 import { Container, Title, Text, Stack, Group, Paper, Badge } from "@mantine/core";
 import { createFileRoute, stripSearchParams } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
@@ -41,16 +42,7 @@ function formatLastUpdated(isoString: string | null) {
     return "未取得";
   }
 
-  const date = new Date(isoString);
-
-  return date.toLocaleString("ja-JP", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "Asia/Tokyo",
-  });
+  return format(parse(isoString), { date: "long", time: "short" }, "ja-JP");
 }
 
 function HomePage() {

@@ -1,10 +1,21 @@
 import { gateway, generateText } from "ai";
 import { Result } from "better-result";
+import { format } from "@formkit/tempo";
 import type { Category, NewsArticle, Source } from "~/features/news/types/news-schemas";
+import { DATE_FORMAT } from "~/constants";
 
 //? Vercel AI Gateway model IDs
 //? See: https://vercel.com/ai-gateway/models
 const AI_MODEL = "google/gemini-3-flash";
+const MAX_CURATED_ARTICLES = 20;
+const MAX_SUMMARY_LENGTH = 300;
+const DEFAULT_CATEGORY = "frontend";
+
+const RANK_START = 1;
+const ARRAY_START_INDEX = 0;
+const DEFAULT_COUNTER_VALUE = 0;
+const EMPTY_ARRAY_LENGTH = 0;
+const FIRST_ARRAY_ELEMENT = 0;
 
 const PROMPTS = {
   summarize: (title: string, url: string, content: string) =>
@@ -78,14 +89,16 @@ export async function summarizeArticle(
         throw new Error("No JSON found in response");
       }
 
-      return JSON.parse(jsonMatch[0]);
+      return JSON.parse(jsonMatch[FIRST_ARRAY_ELEMENT]);
     });
 
   const parsed = parseResult.unwrapOr({
     title: title,
-    summary: content.slice(0, 300),
-    category: "frontend" as Category,
+    summary: content.slice(ARRAY_START_INDEX, MAX_SUMMARY_LENGTH),
+    category: DEFAULT_CATEGORY as Category,
   });
+
+  const now = new Date();
 
   return {
     id: crypto.randomUUID(),
@@ -94,21 +107,20 @@ export async function summarizeArticle(
     originalUrl: url,
     source,
     category: parsed.category,
-    publishedAt: new Date().toISOString(),
-    fetchedAt: new Date().toISOString(),
+    publishedAt: format(now, DATE_FORMAT),
+    fetchedAt: format(now, DATE_FORMAT),
     feedName,
   } as const satisfies NewsArticle;
 }
 
 //? 全体で約20件（カテゴリごと約4件 × 5カテゴリ、各カテゴリ最低1件確保）
-const MAX_CURATED_ARTICLES = 20;
 
 function assignCategoryRanks(articles: NewsArticle[]) {
   const categoryCounters: Record<string, number> = {};
 
   return articles.map((article) => {
     const category = article.category;
-    categoryCounters[category] = (categoryCounters[category] || 0) + 1;
+    categoryCounters[category] = (categoryCounters[category] || DEFAULT_COUNTER_VALUE) + RANK_START;
 
     return { ...article, categoryRank: categoryCounters[category] };
   });
@@ -119,14 +131,14 @@ export async function curateNews(articles: NewsArticle[], existingNews?: NewsArt
 
   const newArticles = articles.filter((article) => !existingUrls.has(article.originalUrl));
 
-  if (newArticles.length === 0) {
+  if (newArticles.length === EMPTY_ARRAY_LENGTH) {
     return [];
   }
 
   if (newArticles.length <= MAX_CURATED_ARTICLES) {
     const rankedArticles = newArticles.map((article, index) => ({
       ...article,
-      rank: index + 1,
+      rank: index + RANK_START,
     }));
 
     return assignCategoryRanks(rankedArticles);
@@ -168,10 +180,12 @@ export async function curateNews(articles: NewsArticle[], existingNews?: NewsArt
 
   if (Result.isError(result)) {
     console.error("Failed to curate news:", result.error);
-    const fallbackArticles = newArticles.slice(0, MAX_CURATED_ARTICLES).map((article, index) => ({
-      ...article,
-      rank: index + 1,
-    }));
+    const fallbackArticles = newArticles
+      .slice(ARRAY_START_INDEX, MAX_CURATED_ARTICLES)
+      .map((article, index) => ({
+        ...article,
+        rank: index + RANK_START,
+      }));
 
     return assignCategoryRanks(fallbackArticles);
   }
@@ -183,9 +197,9 @@ export async function curateNews(articles: NewsArticle[], existingNews?: NewsArt
     const article = newArticles.find((a) => a.id === id);
 
     if (article && !existingUrls.has(article.originalUrl)) {
-      curatedArticles.push({ ...article, rank: index + 1 });
+      curatedArticles.push({ ...article, rank: index + RANK_START });
     }
   }
 
-  return assignCategoryRanks(curatedArticles.slice(0, MAX_CURATED_ARTICLES));
+  return assignCategoryRanks(curatedArticles.slice(ARRAY_START_INDEX, MAX_CURATED_ARTICLES));
 }

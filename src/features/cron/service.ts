@@ -1,10 +1,15 @@
+import { isBefore } from "@formkit/tempo";
 import { curateNews } from "~/lib/ai";
 import { getNews, saveNews } from "~/lib/kv";
 import { fetchRSSFeeds } from "~/lib/rss";
 import type { CronApiModel } from "./model";
 
+const SORT_ORDER_AFTER = 1;
+const SORT_ORDER_BEFORE = -1;
+const SORT_ORDER_EQUAL = 0;
+
 export abstract class CronService {
-  static async fetchAndCurateNews(): Promise<CronApiModel.CuratedNews> {
+  static async fetchAndCurateNews() {
     const rssNews = await fetchRSSFeeds().catch(() => []);
 
     const existingNews = await getNews().catch(() => []);
@@ -14,9 +19,17 @@ export abstract class CronService {
         index === self.findIndex((a) => a.originalUrl === article.originalUrl),
     );
 
-    const sortedNews = uniqueNews.sort(
-      (a, b) => new Date(b.fetchedAt).getTime() - new Date(a.fetchedAt).getTime(),
-    );
+    const sortedNews = uniqueNews.sort((a, b) => {
+      if (isBefore(a.fetchedAt, b.fetchedAt)) {
+        return SORT_ORDER_AFTER;
+      }
+
+      if (isBefore(b.fetchedAt, a.fetchedAt)) {
+        return SORT_ORDER_BEFORE;
+      }
+
+      return SORT_ORDER_EQUAL;
+    });
 
     const curatedNews = await curateNews(sortedNews, existingNews);
 

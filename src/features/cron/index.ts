@@ -1,4 +1,6 @@
+import { format } from "@formkit/tempo";
 import { Elysia } from "elysia";
+import { DATE_FORMAT } from "~/constants";
 import type { CronApiModel } from "./model";
 import { CronService } from "./service";
 
@@ -20,7 +22,7 @@ export const cronPlugin = new Elysia({ prefix: "/cron", name: "cron" }).get(
     return {
       success: true,
       count: curatedNews.length,
-      timestamp: new Date().toISOString(),
+      timestamp: format(new Date(), DATE_FORMAT),
     };
   },
   {
