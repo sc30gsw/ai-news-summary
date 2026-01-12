@@ -1,4 +1,4 @@
-import { format, parse } from "@formkit/tempo";
+import { format } from "@formkit/tempo";
 import { Result } from "better-result";
 import pLimit from "p-limit";
 import Parser from "rss-parser";
@@ -142,7 +142,7 @@ export async function fetchRSSFeeds() {
           );
           return {
             ...article,
-            publishedAt: format(parse(item.pubDate), DATE_FORMAT),
+            publishedAt: format(new Date(item.pubDate), DATE_FORMAT),
           };
         });
 
