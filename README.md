@@ -24,13 +24,13 @@ AI・React・TypeScript・バックエンドなどの最新技術ニュースを
 
 ## 監視対象 X アカウント一覧
 
-| カテゴリ | アカウント                                          |
-| -------- | --------------------------------------------------- |
-| AI       | OpenAI, AnthropicAI, GoogleAI, xaboratory, _akhaliq |
-| Frontend | reactjs, vuejs, svelte, vercel, nextjs              |
+| カテゴリ | アカウント                                               |
+| -------- | -------------------------------------------------------- |
+| AI       | OpenAI, AnthropicAI, GoogleAI, xaboratory, \_akhaliq     |
+| Frontend | reactjs, vuejs, svelte, vercel, nextjs                   |
 | Backend  | golang, rustlang, hoaboratory, bunaboratory, deaboratory |
-| Infra    | supabase, convex, turso_tech, Docker, kubernetesio  |
-| Mobile   | reactnative, FlutterDev, Apple, Android, expo       |
+| Infra    | supabase, convex, turso_tech, Docker, kubernetesio       |
+| Mobile   | reactnative, FlutterDev, Apple, Android, expo            |
 
 ## セットアップ
 
