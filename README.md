@@ -4,9 +4,10 @@ AI・React・TypeScript・バックエンドなどの最新技術ニュースを
 
 ## 主な機能
 
-- 11 個の RSS フィードから技術ニュースを自動取得
+- X (Twitter) のテック系アカウントから最新ニュースを自動取得
 - AI による日本語要約生成（200〜300 字）
 - 5 カテゴリへの自動分類（AI, Frontend, Backend, Infra, Mobile）
+- カテゴリごと約 5 件、計約 25 記事を取得
 - カテゴリ別フィルタリング
 - Vercel Cron による毎日自動更新
 
@@ -16,26 +17,20 @@ AI・React・TypeScript・バックエンドなどの最新技術ニュースを
 | -------------- | -------------------------------------------------- |
 | フロントエンド | TanStack Start, React 19, Mantine UI, Tailwind CSS |
 | バックエンド   | Elysia, Nitro                                      |
-| AI             | Vercel AI SDK (google/gemini-3-flash)              |
+| AI             | Vercel AI SDK + xAI (grok-3-latest)                |
 | データ         | Vercel KV                                          |
 | バリデーション | Valibot                                            |
 | ツール         | Bun, Vite, OxLint                                  |
 
-## RSS フィード一覧
+## 監視対象 X アカウント一覧
 
-| カテゴリ | フィード名        | URL                                    |
-| -------- | ----------------- | -------------------------------------- |
-| 一般     | Dev.to            | https://dev.to/feed                    |
-| 一般     | Hacker News       | https://hnrss.org/frontpage            |
-| 一般     | Lobsters          | https://lobste.rs/rss                  |
-| Frontend | CSS-Tricks        | https://css-tricks.com/feed/           |
-| Frontend | Smashing Magazine | https://www.smashingmagazine.com/feed/ |
-| Mobile   | React Native      | https://reactnative.dev/blog/rss.xml   |
-| Mobile   | Flutter           | https://medium.com/feed/flutter        |
-| Infra    | Vercel Blog       | https://vercel.com/atom                |
-| Infra    | Supabase Blog     | https://supabase.com/blog/rss.xml      |
-| Infra    | Convex Blog       | https://blog.convex.dev/rss/           |
-| Infra    | Turso Blog        | https://turso.tech/blog/rss.xml        |
+| カテゴリ | アカウント                                          |
+| -------- | --------------------------------------------------- |
+| AI       | OpenAI, AnthropicAI, GoogleAI, xaboratory, _akhaliq |
+| Frontend | reactjs, vuejs, svelte, vercel, nextjs              |
+| Backend  | golang, rustlang, hoaboratory, bunaboratory, deaboratory |
+| Infra    | supabase, convex, turso_tech, Docker, kubernetesio  |
+| Mobile   | reactnative, FlutterDev, Apple, Android, expo       |
 
 ## セットアップ
 
@@ -106,7 +101,7 @@ src/
 │       └── constants/      # 定数定義
 ├── lib/
 │   ├── ai.ts               # AI SDK 設定
-│   ├── rss.ts              # RSS フィード処理
+│   ├── x-search.ts         # X (Twitter) 検索処理
 │   └── kv.ts               # Vercel KV キャッシュ
 └── constants/
     └── index.ts            # 共通定数
@@ -116,7 +111,7 @@ src/
 
 | メソッド | パス                   | 説明                                              |
 | -------- | ---------------------- | ------------------------------------------------- |
-| GET      | `/api/cron/fetch-news` | RSS フィードから記事を取得し、AI でキュレーション |
+| GET      | `/api/cron/fetch-news` | X (Twitter) から記事を取得し、AI でキュレーション |
 
 レスポンス例:
 
