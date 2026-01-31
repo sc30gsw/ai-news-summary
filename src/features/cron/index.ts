@@ -29,7 +29,7 @@ export const cronPlugin = new Elysia({ prefix: "/cron", name: "cron" }).get(
     detail: {
       summary: "Fetch and curate news",
       description:
-        "Cron job endpoint to fetch news from RSS feeds and curate ~50 articles (about 10 per category)",
+        "Cron job endpoint to fetch news from X (Twitter) using xAI x_search and curate ~25 articles (about 5 per category)",
       tags: ["Cron"],
     },
   },

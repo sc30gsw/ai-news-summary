@@ -26,7 +26,7 @@ const CATEGORY_COLORS = {
 
 const SOURCE_COLORS = {
   web: "indigo",
-  rss: "teal",
+  x: "teal",
 } as const satisfies Record<Source, MantineColor>;
 
 export function NewsCard({ article }: Record<"article", NewsArticle>) {

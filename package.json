@@ -16,7 +16,7 @@
     "fmt:fix": "oxfmt"
   },
   "dependencies": {
-    "@ai-sdk/xai": "^3.0.13",
+    "@ai-sdk/xai": "^3.0.44",
     "@elysiajs/openapi": "^1.4.13",
     "@emotion/react": "^11.14.0",
     "@formkit/tempo": "^1.0.0",
@@ -34,7 +34,6 @@
     "p-limit": "^7.2.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "rss-parser": "^3.13.0",
     "valibot": "^1.2.0"
   },
   "devDependencies": {

@@ -1,7 +1,7 @@
 import { isBefore } from "@formkit/tempo";
 import { curateNews } from "~/lib/ai";
 import { getNews, saveNews } from "~/lib/kv";
-import { fetchRSSFeeds } from "~/lib/rss";
+import { fetchXNews } from "~/lib/x-search";
 import type { CronApiModel } from "./model";
 
 const SORT_ORDER_AFTER = 1;
@@ -10,11 +10,11 @@ const SORT_ORDER_EQUAL = 0;
 
 export abstract class CronService {
   static async fetchAndCurateNews() {
-    const rssNews = await fetchRSSFeeds().catch(() => []);
+    const xNews = await fetchXNews().catch(() => []);
 
     const existingNews = await getNews().catch(() => []);
 
-    const uniqueNews = rssNews.filter(
+    const uniqueNews = xNews.filter(
       (article, index, self) =>
         index === self.findIndex((a) => a.originalUrl === article.originalUrl),
     );

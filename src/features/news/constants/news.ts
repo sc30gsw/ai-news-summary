@@ -11,5 +11,5 @@ export const CATEGORY_LABELS = {
 
 export const SOURCE_LABELS = {
   web: "Web",
-  rss: "RSS",
+  x: "X",
 } as const satisfies Record<Source, string>;

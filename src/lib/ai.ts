@@ -1,7 +1,7 @@
 import { gateway, generateText } from "ai";
 import { Result } from "better-result";
 import { format } from "@formkit/tempo";
-import type { Category, NewsArticle, Source } from "~/features/news/types/news-schemas";
+import type { Category, NewsArticle } from "~/features/news/types/news-schemas";
 import { DATE_FORMAT } from "~/constants";
 
 //? Vercel AI Gateway model IDs
@@ -74,7 +74,7 @@ export async function summarizeArticle(
   title: string,
   content: string,
   url: string,
-  source: Source,
+  source: "x" | "web",
   feedName?: string,
 ) {
   const { text } = await generateText({
